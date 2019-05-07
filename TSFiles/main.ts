@@ -112,7 +112,7 @@ export class RealDebridRESTAuth {
                     action: 'Allow'
                 },
                 headers: {
-                    'Cookie': "auth=H7ZERNCDLDUZRPZUGGVNJ2RIRFXWSZJJ3KADSGA",
+                    'Cookie': `auth=${authCookie}`,
                 },
                 followAllRedirects: true,
             })
@@ -125,7 +125,7 @@ export class RealDebridRESTAuth {
                         action: 'Set that name'
                     },
                     headers: {
-                        'Cookie': "auth=H7ZERNCDLDUZRPZUGGVNJ2RIRFXWSZJJ3KADSGA",
+                        'Cookie': `auth=${authCookie}`,
                     },
                     followAllRedirects: true,
                 })
@@ -356,8 +356,10 @@ class RealDebridREST {
 
 }
 
+let myCookie : string = '' // Here your Real-Debrid cookie
+
 RealDebridRESTAuth.ObtainAuthData()
-.then(authData => RealDebridRESTAuth.ByPassUserVerificationEndPoint(authData, 'H7ZERNCDLDUZRPZUGGVNJ2RIRFXWSZJJ3KADSGA'))
+.then(authData => RealDebridRESTAuth.ByPassUserVerificationEndPoint(authData, myCookie))
 .then(RealDebridRESTAuth.CheckCredentialsEndpoint)
 .then(RealDebridRESTAuth.ObtainToken)
 .then(authToken => {
