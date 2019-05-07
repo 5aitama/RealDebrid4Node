@@ -2,8 +2,11 @@
 ### How to obtain **Authentication Token** ?
 The `cookie` is the value of `auth` if you open cookies from real-debrid.com *(you need to be logged to get it)*
 ```js
+
+const RealDebridRESTAuth = require('RealDebridRESTAuth')
+
 // This is cookie from real-debrid.com
-let cookie: string = 'YOUR_AUTH_COOKIE_HERE'
+let cookie = 'YOUR_AUTH_COOKIE_HERE'
 
 // Obtain auth data
 RealDebridRESTAuth.ObtainAuthData()
@@ -26,6 +29,7 @@ RealDebridRESTAuth.ObtainAuthData()
 ### How to make request ?
 First you need to create new instance of `RealDebridREST`
 ```js
+const RealDebridREST = require(RealDebridREST)
 let realDebrid = new RealDebridREST(authToken)
 ```
 And now you can perform request to Real-Debrid ! 
