@@ -1,5 +1,6 @@
 import rp from "request-promise-native";
 import fs = require('fs')
+import moment = require("moment");
 
 export interface IRDAuthData {
     device_code             : string
@@ -60,6 +61,105 @@ export interface IRDUnrestrictLink {
     alternative : IRDUnrestrictLinkAlternative[]
 }
 
+export interface IRDTrafficData {
+    left    : number
+    bytes   : number
+    links   : number
+    limit   : number
+    type    : string
+    extra   : number
+    reset   : string
+}
+
+export interface IRDTraffic {
+    [index: string] : IRDTrafficData
+}
+
+export interface IRDTrafficDetailsHostData {
+    [index: string] : number
+}
+
+export interface IRDTrafficDetailsHost {
+    host    : IRDTrafficDetailsHostData
+    bytes   : number
+}
+
+export interface IRDTrafficDetails {
+    [index: string] : IRDTrafficDetailsHost
+}
+
+export interface IRDStreamingQuality {
+    [index: string]: string
+}
+
+export interface IRDStreaming {
+    apple       : IRDStreamingQuality
+    dash        : IRDStreamingQuality
+    liveMP4     : IRDStreamingQuality
+    h264WebM    : IRDStreamingQuality
+}
+
+export interface IRDStreamingMediaInfosDetailsVideoData {
+    stream      : string
+    lang        : string
+    lang_iso    : string
+    codec       : string
+    colorspace  : string
+    width       : number
+    height      : number
+}
+
+export interface IRDStreamingMediaInfosDetailsVideo {
+    [index: string] : IRDStreamingMediaInfosDetailsVideoData
+}
+
+export interface IRDStreamingMediaInfosDetailsAudioData {
+    stream      : string
+    lang        : string
+    lang_iso    : string
+    codec       : string
+    sampling    : number
+    channels    : number
+}
+
+export interface IRDStreamingMediaInfosDetailsAudio {
+    [index: string] : IRDStreamingMediaInfosDetailsAudioData
+}
+
+export interface IRDStreamingMediaInfosDetailsSubtitlesData {
+    stream      : string
+    lang        : string
+    lang_iso    : string
+    type        : string
+}
+
+export interface IRDStreamingMediaInfosDetailsSubtitles {
+    [index: string] : IRDStreamingMediaInfosDetailsSubtitlesData
+}
+
+export interface IRDStreamingMediaInfosDetails {
+    video       : IRDStreamingMediaInfosDetailsVideo
+    audio       : IRDStreamingMediaInfosDetailsAudio
+    subtitles   : IRDStreamingMediaInfosDetailsSubtitles[]
+}
+
+export interface IRDStreamingMediaInfos {
+    filename        : string
+    hoster          : string
+    link            : string
+    type            : string
+    season          : string
+    episode         : string
+    year            : string
+    duration        : number
+    bitrate         : number
+    size            : number 
+    details         : IRDStreamingMediaInfosDetails
+    poster_path     : string
+    audio_image     : string
+    backdrop_path   : string
+}
+
 /**
  * Cette class donne les fonctions
  * necessaire a l'obtention d'un
@@ -69,11 +169,12 @@ export interface IRDUnrestrictLink {
  * adresse https://api.real-debrid.com/#device_auth_no_secret
  */
 export class RealDebridRESTAuth {
+
     private static readonly clientID           = 'X245A4XAIBGVM'
-    private static readonly base_url           = 'https://api.real-debrid.com/oauth/v2/'
-    private static readonly url_device         = 'device/code'
-    private static readonly url_credentials    = 'device/credentials'
-    private static readonly url_token          = 'token'
+    private static readonly base_url           = 'https://api.real-debrid.com/oauth/v2'
+    private static readonly url_device         = '/device/code'
+    private static readonly url_credentials    = '/device/credentials'
+    private static readonly url_token          = '/token'
     private static readonly grantType          = 'http://oauth.net/grant_type/device/1.0'
     
     /**
@@ -182,7 +283,7 @@ export class RealDebridRESTAuth {
     }
 }
 
-class RealDebridREST {
+export class RealDebridREST {
     private static readonly base_url : string = 'https://api.real-debrid.com/rest/1.0/'
     
     private token : IRDAuthToken
@@ -324,7 +425,7 @@ class RealDebridREST {
         })
     }
 
-    public UnrestrictConainerFile(path: string) {
+    public UnrestrictConainerFile(path: string, filename: string) {
         return new Promise<string[]>((resolve, reject) => {
             let option = {
                 mehtod: 'PUT',
@@ -333,7 +434,7 @@ class RealDebridREST {
                     file: {
                         value: fs.createReadStream(path),
                         option: {
-                            filename: path
+                            filename: filename
                         }
                     }
                 },
@@ -354,33 +455,71 @@ class RealDebridREST {
         })
     }
 
+    public Traffic() {
+        return new Promise<IRDTraffic>((resolve, reject) => {
+            rp({
+                uri: RealDebridREST.base_url + 'traffic',
+                headers: {
+                    'Authorization': this.auth
+                },
+                json: true
+            })
+            .then(res => { 
+                resolve(<IRDTraffic>res)
+            })
+            .catch(reject)
+        })
+    }
+
+    public TrafficDetails(start: Date, end: Date) {
+        return new Promise<IRDTrafficDetails>((resolve, reject) => {
+            rp({
+                uri: RealDebridREST.base_url + 'traffic/details',
+                headers: {
+                    'Authorization': this.auth
+                },
+                qs: {
+                    start: moment(start).format('YYYY-MM-DD'),
+                    end: moment(end).format('YYYY-MM-DD')
+                },
+                json: true
+            })
+            .then(res => { 
+                resolve(<IRDTrafficDetails>res)
+            })
+            .catch(reject)
+        })
+    }
+
+    public StreamingTranscode(id: string) {
+        return new Promise<IRDStreaming>((resolve, reject) => {
+            rp({
+                uri: RealDebridREST.base_url + `streaming/transcode/${id}`,
+                headers: {
+                    'Authorization': this.auth
+                },
+                json: true
+            })
+            .then(res => { 
+                resolve(<IRDStreaming>res)
+            })
+            .catch(reject)
+        })
+    }
+
+    public StreamingMediaInfos(id: string) {
+        return new Promise<IRDStreamingMediaInfos>((resolve, reject) => {
+            rp({
+                uri: RealDebridREST.base_url + `streaming/mediaInfos/${id}`,
+                headers: {
+                    'Authorization': this.auth
+                },
+                json: true
+            })
+            .then(res => { 
+                resolve(<IRDStreamingMediaInfos>res)
+            })
+            .catch(reject)
+        })
+    }
 }
-
-let myCookie : string = '' // Here your Real-Debrid cookie
-
-RealDebridRESTAuth.ObtainAuthData()
-.then(authData => RealDebridRESTAuth.ByPassUserVerificationEndPoint(authData, myCookie))
-.then(RealDebridRESTAuth.CheckCredentialsEndpoint)
-.then(RealDebridRESTAuth.ObtainToken)
-.then(authToken => {
-    
-    let rd = new RealDebridREST(authToken)
-    
-    console.log('Time')
-    rd.Time()
-    .then((r) => {
-        console.log(`result ${r}`)
-        console.log('Test Time Iso')
-        return rd.TimeIso()
-    })
-    .then((r) => {
-        console.log(`result ${r}`)
-        console.log('Test UnrestrictCheck')
-        return rd.UnrestrictCheck('https://1fichier.com/?aliiga1j185z63derxjo&af=22123')
-    })
-    .then((r) => {
-        console.log(r)
-    })
-
-})
-.catch(err => console.log(err))

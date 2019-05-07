@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const request_promise_native_1 = __importDefault(require("request-promise-native"));
 const fs = require("fs");
+const moment = require("moment");
 /**
  * Cette class donne les fonctions
  * necessaire a l'obtention d'un
@@ -50,7 +51,7 @@ class RealDebridRESTAuth {
                     action: 'Allow'
                 },
                 headers: {
-                    'Cookie': "auth=H7ZERNCDLDUZRPZUGGVNJ2RIRFXWSZJJ3KADSGA",
+                    'Cookie': `auth=${authCookie}`,
                 },
                 followAllRedirects: true,
             })
@@ -63,7 +64,7 @@ class RealDebridRESTAuth {
                         action: 'Set that name'
                     },
                     headers: {
-                        'Cookie': "auth=H7ZERNCDLDUZRPZUGGVNJ2RIRFXWSZJJ3KADSGA",
+                        'Cookie': `auth=${authCookie}`,
                     },
                     followAllRedirects: true,
                 })
@@ -118,10 +119,10 @@ class RealDebridRESTAuth {
     }
 }
 RealDebridRESTAuth.clientID = 'X245A4XAIBGVM';
-RealDebridRESTAuth.base_url = 'https://api.real-debrid.com/oauth/v2/';
-RealDebridRESTAuth.url_device = 'device/code';
-RealDebridRESTAuth.url_credentials = 'device/credentials';
-RealDebridRESTAuth.url_token = 'token';
+RealDebridRESTAuth.base_url = 'https://api.real-debrid.com/oauth/v2';
+RealDebridRESTAuth.url_device = '/device/code';
+RealDebridRESTAuth.url_credentials = '/device/credentials';
+RealDebridRESTAuth.url_token = '/token';
 RealDebridRESTAuth.grantType = 'http://oauth.net/grant_type/device/1.0';
 exports.RealDebridRESTAuth = RealDebridRESTAuth;
 class RealDebridREST {
@@ -256,7 +257,7 @@ class RealDebridREST {
                 .catch(reject);
         });
     }
-    UnrestrictConainerFile(path) {
+    UnrestrictConainerFile(path, filename) {
         return new Promise((resolve, reject) => {
             let option = {
                 mehtod: 'PUT',
@@ -265,7 +266,7 @@ class RealDebridREST {
                     file: {
                         value: fs.createReadStream(path),
                         option: {
-                            filename: path
+                            filename: filename
                         }
                     }
                 },
@@ -286,28 +287,70 @@ class RealDebridREST {
                 .catch(reject);
         });
     }
+    Traffic() {
+        return new Promise((resolve, reject) => {
+            request_promise_native_1.default({
+                uri: RealDebridREST.base_url + 'traffic',
+                headers: {
+                    'Authorization': this.auth
+                },
+                json: true
+            })
+                .then(res => {
+                resolve(res);
+            })
+                .catch(reject);
+        });
+    }
+    TrafficDetails(start, end) {
+        return new Promise((resolve, reject) => {
+            request_promise_native_1.default({
+                uri: RealDebridREST.base_url + 'traffic/details',
+                headers: {
+                    'Authorization': this.auth
+                },
+                qs: {
+                    start: moment(start).format('YYYY-MM-DD'),
+                    end: moment(end).format('YYYY-MM-DD')
+                },
+                json: true
+            })
+                .then(res => {
+                resolve(res);
+            })
+                .catch(reject);
+        });
+    }
+    StreamingTranscode(id) {
+        return new Promise((resolve, reject) => {
+            request_promise_native_1.default({
+                uri: RealDebridREST.base_url + `streaming/transcode/${id}`,
+                headers: {
+                    'Authorization': this.auth
+                },
+                json: true
+            })
+                .then(res => {
+                resolve(res);
+            })
+                .catch(reject);
+        });
+    }
+    StreamingMediaInfos(id) {
+        return new Promise((resolve, reject) => {
+            request_promise_native_1.default({
+                uri: RealDebridREST.base_url + `streaming/mediaInfos/${id}`,
+                headers: {
+                    'Authorization': this.auth
+                },
+                json: true
+            })
+                .then(res => {
+                resolve(res);
+            })
+                .catch(reject);
+        });
+    }
 }
 RealDebridREST.base_url = 'https://api.real-debrid.com/rest/1.0/';
-RealDebridRESTAuth.ObtainAuthData()
-    .then(authData => RealDebridRESTAuth.ByPassUserVerificationEndPoint(authData, 'H7ZERNCDLDUZRPZUGGVNJ2RIRFXWSZJJ3KADSGA'))
-    .then(RealDebridRESTAuth.CheckCredentialsEndpoint)
-    .then(RealDebridRESTAuth.ObtainToken)
-    .then(authToken => {
-    let rd = new RealDebridREST(authToken);
-    console.log('Time');
-    rd.Time()
-        .then((r) => {
-        console.log(`result ${r}`);
-        console.log('Test Time Iso');
-        return rd.TimeIso();
-    })
-        .then((r) => {
-        console.log(`result ${r}`);
-        console.log('Test UnrestrictCheck');
-        return rd.UnrestrictCheck('https://1fichier.com/?aliiga1j185z63derxjo&af=22123');
-    })
-        .then((r) => {
-        console.log(r);
-    });
-})
-    .catch(err => console.log(err));
+exports.RealDebridREST = RealDebridREST;
