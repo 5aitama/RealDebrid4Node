@@ -29,7 +29,8 @@ RealDebridRESTAuth.ObtainAuthData()
 ### How to make request ?
 First you need to create new instance of `RealDebridREST`
 ```js
-const RealDebridREST = require(RealDebridREST)
+const RealDebridREST = require('RealDebridREST')
+
 let realDebrid = new RealDebridREST(authToken)
 ```
 And now you can perform request to Real-Debrid ! 
