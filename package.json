@@ -1,9 +1,9 @@
 {
   "name": "realdebrid4node",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Real Debrid REST API with node JS ",
-  "main": "build/index.js",
-  "types": "build/index.d.ts",
+  "main": "build/main.js",
+  "types": "build/main.d.ts",
   "dependencies": {
     "moment": "^2.24.0",
     "request": "^2.88.0",
